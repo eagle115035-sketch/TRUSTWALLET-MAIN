@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { createApp } from "../server/app";
+import { createApp } from "../server/app.js";
 
 let appPromise: Promise<Express> | null = null;
 
@@ -24,9 +24,9 @@ async function getApp() {
 export default async function handler(req: any, res: any) {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(500).json({ 
-        error: "Configuration Error", 
-        message: "DATABASE_URL is missing in environment variables" 
+      return res.status(500).json({
+        error: "Configuration Error",
+        message: "DATABASE_URL is missing in environment variables"
       });
     }
 

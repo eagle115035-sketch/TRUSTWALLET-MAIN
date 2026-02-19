@@ -1,18 +1,18 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
-import { storage } from "./storage";
-import { loginSchema, type Subscription, type Plan } from "../shared/schema";
-import { isAllowedVideoUrl } from "../shared/video";
+import { storage } from "./storage.js";
+import { loginSchema, type Subscription, type Plan } from "../shared/schema.js";
+import { isAllowedVideoUrl } from "../shared/video.js";
 import bcrypt from "bcrypt";
 import connectPgSimple from "connect-pg-simple";
 import { z } from "zod";
-import { encrypt, decrypt } from "./crypto";
+import { encrypt, decrypt } from "./crypto.js";
 import { createHash, randomBytes } from "node:crypto";
 import { Wallet, Contract, Interface, formatUnits, id as keccak256Id, parseUnits } from "ethers";
 import { SUBSCRIPTION_CONTRACT_ABI, getContractForNetwork } from "../shared/contracts";
-import { runSchedulerTick } from "./scheduler";
-import { getRpcUrls, isRpcConnectivityError, makeJsonRpcProvider, RpcUnavailableError } from "./rpc";
-import { applyReceiverSwitchWithRollback, type WalletSwitchTarget } from "./wallet-switch";
+import { runSchedulerTick } from "./scheduler.js";
+import { getRpcUrls, isRpcConnectivityError, makeJsonRpcProvider, RpcUnavailableError } from "./rpc.js";
+import { applyReceiverSwitchWithRollback, type WalletSwitchTarget } from "./wallet-switch.js";
 
 function getIntervalMs(value: number, unit: string): number {
   const multipliers: Record<string, number> = {

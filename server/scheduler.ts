@@ -1,8 +1,9 @@
 import { Wallet, Contract } from "ethers";
-import { storage } from "./storage";
-import { SUBSCRIPTION_CONTRACT_ABI, getContractForNetwork } from "../shared/contracts";
-import { decrypt } from "./crypto";
-import { getRpcUrls, makeJsonRpcProvider } from "./rpc";
+import { storage } from "./storage.js";
+import { SUBSCRIPTION_CONTRACT_ABI, getContractForNetwork } from "../shared/contracts.js";
+import { decrypt } from "./crypto.js";
+import { getRpcUrls, makeJsonRpcProvider } from "./rpc.js";
+import { type Subscription, type Plan, type SchedulerLog } from "../shared/schema.js";
 import os from "node:os";
 
 const MAX_RETRIES = 3;
