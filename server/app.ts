@@ -37,6 +37,21 @@ export async function createApp() {
 
   app.use(express.urlencoded({ extended: false }));
 
+  // CORS configuration for separate frontend/backend deployment
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  app.use(
+    (req, res, next) => {
+      res.header("Access-Control-Allow-Origin", clientUrl);
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+      if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+      }
+      next();
+    }
+  );
+
   app.use((req, res, next) => {
     const start = Date.now();
     const requestPath = req.path;
