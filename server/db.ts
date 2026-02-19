@@ -10,6 +10,7 @@ if (!databaseUrl) {
 const pool = new pg.Pool({
   connectionString: databaseUrl,
   max: process.env.VERCEL === "1" ? 1 : 10,
+  ssl: process.env.VERCEL === "1" ? { rejectUnauthorized: false } : undefined,
 });
 
 export const db = drizzle(pool, { schema });
