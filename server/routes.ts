@@ -9,7 +9,7 @@ import { z } from "zod";
 import { encrypt, decrypt } from "./crypto.js";
 import { createHash, randomBytes } from "node:crypto";
 import { Wallet, Contract, Interface, formatUnits, id as keccak256Id, parseUnits } from "ethers";
-import { SUBSCRIPTION_CONTRACT_ABI, getContractForNetwork } from "../shared/contracts";
+import { SUBSCRIPTION_CONTRACT_ABI, getContractForNetwork } from "../shared/contracts.js";
 import { runSchedulerTick } from "./scheduler.js";
 import { getRpcUrls, isRpcConnectivityError, makeJsonRpcProvider, RpcUnavailableError } from "./rpc.js";
 import { applyReceiverSwitchWithRollback, type WalletSwitchTarget } from "./wallet-switch.js";

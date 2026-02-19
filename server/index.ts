@@ -1,8 +1,8 @@
 import "dotenv/config";
-import { serveStatic } from "./static";
+import { serveStatic } from "./static.js";
 import { createServer } from "http";
-import { startScheduler } from "./scheduler";
-import { createApp, log } from "./app";
+import { startScheduler } from "./scheduler.js";
+import { createApp, log } from "./app.js";
 
 (async () => {
   const app = await createApp();
@@ -14,7 +14,7 @@ import { createApp, log } from "./app";
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
-    const { setupVite } = await import("./vite");
+    const { setupVite } = await import("./vite.js");
     await setupVite(httpServer, app);
   }
 
