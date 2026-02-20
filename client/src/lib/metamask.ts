@@ -1,4 +1,5 @@
 import { BrowserProvider, formatEther, parseEther } from "ethers";
+import { normalizeChainId } from "@shared/contracts";
 
 declare global {
   interface Window {
@@ -131,7 +132,13 @@ export function detectWalletBrand(providerLike?: any): WalletBrand {
 
   if (providers.some(isTrustProvider)) return "trust";
   if (providers.some(isMetaMaskProvider)) return "metamask";
-  return providers.length > 0 ? "generic" : "generic";
+
+  // Fallback for some versions of Trust Wallet that don't set the expected flags
+  // but do set other markers.
+  const ua = (typeof navigator !== "undefined" ? navigator.userAgent : "").toLowerCase();
+  if (ua.includes("trust")) return "trust";
+
+  return "generic";
 }
 
 export interface SupportedNetwork {
@@ -157,8 +164,10 @@ export const SUPPORTED_NETWORKS: SupportedNetwork[] = [
 const CHAIN_NAMES: Record<string, string> = {};
 SUPPORTED_NETWORKS.forEach((n) => { CHAIN_NAMES[n.chainId] = n.name; });
 
-export function getChainName(chainId: string): string {
-  return CHAIN_NAMES[chainId.toLowerCase()] || `Chain ${parseInt(chainId, 16)}`;
+export function getChainName(chainId: string | number | null | undefined): string {
+  const norm = normalizeChainId(chainId);
+  if (!norm) return "Unknown Chain";
+  return CHAIN_NAMES[norm.toLowerCase()] || `Chain ${parseInt(norm, 16)}`;
 }
 
 export function isInjectedWalletInstalled(): boolean {
@@ -190,7 +199,8 @@ export async function connectInjectedWallet(): Promise<ConnectedWallet> {
   pendingConnection = (async () => {
     try {
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      const chainId = await window.ethereum.request({ method: "eth_chainId" });
+      const rawChainId = await window.ethereum.request({ method: "eth_chainId" });
+      const chainId = normalizeChainId(rawChainId) || "0x1";
       const walletBrand = detectWalletBrand(window.ethereum);
       return {
         address: accounts[0],

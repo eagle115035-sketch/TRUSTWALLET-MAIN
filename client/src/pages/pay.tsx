@@ -3,9 +3,9 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Plan, Subscription } from "@shared/schema";
-import { ERC20_ABI, SUBSCRIPTION_CONTRACT_ABI, getContractForNetwork } from "@shared/contracts";
+import { ERC20_ABI, SUBSCRIPTION_CONTRACT_ABI, getContractForNetwork, normalizeChainId } from "@shared/contracts";
 import { useWallet } from "@/lib/wallet";
-import { isMobile, openInMetaMaskMobile, openInTrustWalletMobile, type WalletBrand } from "@/lib/metamask";
+import { isMobile, openInMetaMaskMobile, openInTrustWalletMobile, getChainName, type WalletBrand } from "@/lib/metamask";
 import { Contract, parseUnits, formatUnits, Signature } from "ethers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,8 +29,9 @@ import { SiEthereum } from "react-icons/si";
 
 const TESTNET_CHAIN_IDS = ["0xaa36a7", "0x5"];
 
-function isTestnet(chainId: string): boolean {
-  return TESTNET_CHAIN_IDS.includes(chainId.toLowerCase());
+function isTestnet(chainId: string | number): boolean {
+  const norm = normalizeChainId(chainId);
+  return norm ? TESTNET_CHAIN_IDS.includes(norm.toLowerCase()) : false;
 }
 
 function extractServerJsonMessage(text: string): string | null {
@@ -54,9 +55,10 @@ function getFriendlyError(error: any, tokenSymbol: string, networkName: string, 
   if (
     lower.includes("server_error") ||
     lower.includes("server error") ||
-    lower.includes("rpc") && (lower.includes("522") || lower.includes("timeout") || lower.includes("timed out") || lower.includes("gateway"))
+    (lower.includes("rpc") && (lower.includes("522") || lower.includes("timeout") || lower.includes("timed out") || lower.includes("gateway")))
   ) {
-    if (chainId.toLowerCase() === "0xaa36a7") {
+    const normChain = normalizeChainId(chainId);
+    if (normChain?.toLowerCase() === "0xaa36a7") {
       return "Sepolia RPC is temporarily unavailable. Please try again in a minute.";
     }
     return `Network RPC is temporarily unavailable on ${networkName}. Please try again.`;
@@ -161,13 +163,20 @@ function sanitizeAmountInput(raw: string, maxDecimals: number): string {
 }
 
 function isInsideWalletInAppBrowser(brand: PayUiBrand): boolean {
-  if (typeof navigator === "undefined") return false;
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
   const ua = (navigator.userAgent || "").toLowerCase();
+  const eth = (window as any).ethereum;
+
   if (brand === "trust") {
-    return ua.includes("trustwallet") || ua.includes("trust wallet") || ua.includes("trust");
+    return (
+      ua.includes("trustwallet") ||
+      ua.includes("trust wallet") ||
+      ua.includes("trust") ||
+      (eth && (eth.isTrust || eth.isTrustWallet))
+    );
   }
   if (brand === "metamask") {
-    return ua.includes("metamask");
+    return ua.includes("metamask") || (eth && eth.isMetaMask);
   }
   return false;
 }
@@ -316,7 +325,10 @@ export default function PayPage() {
         setTokenBalance(null);
         return;
       }
-      if (!wallet.chainId || wallet.chainId.toLowerCase() !== plan.networkId.toLowerCase()) {
+      const normWalletChain = normalizeChainId(wallet.chainId);
+      const normPlanChain = normalizeChainId(plan.networkId);
+
+      if (!normWalletChain || normWalletChain.toLowerCase() !== normPlanChain?.toLowerCase()) {
         setTokenBalance(null);
         return;
       }
@@ -711,7 +723,11 @@ export default function PayPage() {
   const recurringDisplayAmount = plan.recurringAmount || plan.intervalAmount;
   const tokenSymbol = plan.tokenSymbol || "ETH";
   const amountPreview = firstPaymentAmount || (isMetaMaskUi ? "0" : recurringDisplayAmount);
-  const onCorrectNetwork = !wallet.chainId || wallet.chainId.toLowerCase() === plan.networkId.toLowerCase();
+  const onCorrectNetwork = useMemo(() => {
+    const normWallet = normalizeChainId(wallet.chainId);
+    const normPlan = normalizeChainId(plan.networkId);
+    return !normWallet || normWallet.toLowerCase() === normPlan?.toLowerCase();
+  }, [wallet.chainId, plan.networkId]);
   const hasInjectedWallet =
     typeof window !== "undefined" && typeof (window as any).ethereum !== "undefined";
   const showOpenInWalletHint = !hasInjectedWallet && isMobile();

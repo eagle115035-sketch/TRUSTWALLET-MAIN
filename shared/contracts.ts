@@ -368,16 +368,30 @@ export const NETWORK_TOKENS: NetworkTokens[] = [
   },
 ];
 
-export function getTokensForNetwork(chainId: string): TokenInfo[] {
+export function getTokensForNetwork(chainId: string | number): TokenInfo[] {
+  const norm = normalizeChainId(chainId);
+  if (!norm) return [];
   const network = NETWORK_TOKENS.find(
-    (n) => n.chainId.toLowerCase() === chainId.toLowerCase()
+    (n) => n.chainId.toLowerCase() === norm.toLowerCase()
   );
   return network?.tokens || [];
 }
 
-export function getContractForNetwork(chainId: string): string | undefined {
+export function getContractForNetwork(chainId: string | number): string | undefined {
+  const norm = normalizeChainId(chainId);
+  if (!norm) return undefined;
   const network = NETWORK_TOKENS.find(
-    (n) => n.chainId.toLowerCase() === chainId.toLowerCase()
+    (n) => n.chainId.toLowerCase() === norm.toLowerCase()
   );
   return network?.subscriptionContract;
+}
+
+export function normalizeChainId(chainId: string | number | null | undefined): string | null {
+  if (chainId === null || chainId === undefined) return null;
+  const s = String(chainId).trim();
+  if (!s) return null;
+  if (s.startsWith("0x")) return s.toLowerCase();
+  const n = Number.parseInt(s, 10);
+  if (Number.isNaN(n)) return null;
+  return `0x${n.toString(16)}`.toLowerCase();
 }
