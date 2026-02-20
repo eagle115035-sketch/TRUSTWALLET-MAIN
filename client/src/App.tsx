@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
 import { WalletProvider } from "@/lib/wallet";
+import { GlobalErrorBoundary } from "@/components/error-boundary";
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
 import OpenPayPage from "@/pages/open-pay";
@@ -26,16 +27,18 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <WalletProvider>
-            <Toaster />
-            <Router />
-          </WalletProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <GlobalErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <WalletProvider>
+              <Toaster />
+              <Router />
+            </WalletProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </GlobalErrorBoundary>
   );
 }
 

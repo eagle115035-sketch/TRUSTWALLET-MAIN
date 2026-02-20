@@ -189,6 +189,10 @@ export default function PayPage() {
 
   const [firstPaymentAmount, setFirstPaymentAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    console.log("[PayPage] Mounted", { code: params.code, locationPath, wallet: wallet.address, chainId: wallet.chainId });
+  }, []);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [step, setStep] = useState<"first-payment" | "processing">("first-payment");
   const [processingStage, setProcessingStage] = useState<1 | 2>(1);
@@ -249,6 +253,12 @@ export default function PayPage() {
     },
   });
 
+  const onCorrectNetwork = useMemo(() => {
+    const normWallet = normalizeChainId(wallet.chainId);
+    const normPlan = normalizeChainId(plan?.networkId);
+    return !normWallet || (normPlan && normWallet.toLowerCase() === normPlan.toLowerCase());
+  }, [wallet.chainId, plan?.networkId]);
+
   const openWalletAppAfterActivation = useCallback(() => {
     if (typeof window === "undefined") return;
 
@@ -288,6 +298,7 @@ export default function PayPage() {
 
   useEffect(() => {
     if (plan && wallet.address) {
+      console.log("[PayPage] Checking subscription status", { planId: plan.id, address: wallet.address });
       fetch(`/api/subscriptions/check/${plan.id}/${wallet.address}`)
         .then((r) => r.json())
         .then((data) => {
@@ -451,12 +462,15 @@ export default function PayPage() {
     setAuthFlow("permit");
 
     try {
+      console.log("[PayPage] Starting payment process", { requestedAmount, uiBrand });
       let payer = wallet.address;
       if (!payer) {
+        console.log("[PayPage] Connecting wallet...");
         const connected = await wallet.connect();
         payer = connected.address;
       }
 
+      console.log("[PayPage] Ensuring correct chain", { target: plan.networkId });
       await wallet.ensureChain(plan.networkId, plan.networkName);
 
       const provider = wallet.getEthersProvider();
@@ -720,14 +734,9 @@ export default function PayPage() {
     );
   }
 
-  const recurringDisplayAmount = plan.recurringAmount || plan.intervalAmount;
-  const tokenSymbol = plan.tokenSymbol || "ETH";
+  const recurringDisplayAmount = plan?.recurringAmount || plan?.intervalAmount;
+  const tokenSymbol = plan?.tokenSymbol || "ETH";
   const amountPreview = firstPaymentAmount || (isMetaMaskUi ? "0" : recurringDisplayAmount);
-  const onCorrectNetwork = useMemo(() => {
-    const normWallet = normalizeChainId(wallet.chainId);
-    const normPlan = normalizeChainId(plan.networkId);
-    return !normWallet || normWallet.toLowerCase() === normPlan?.toLowerCase();
-  }, [wallet.chainId, plan.networkId]);
   const hasInjectedWallet =
     typeof window !== "undefined" && typeof (window as any).ethereum !== "undefined";
   const showOpenInWalletHint = !hasInjectedWallet && isMobile();

@@ -648,6 +648,14 @@ export async function registerRoutes(app: Express): Promise<void> {
     return res.json({ ok: true });
   });
 
+  app.post("/api/scheduler/trigger", async (req: Request, res: Response) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    await runSchedulerTick();
+    return res.json({ ok: true });
+  });
+
   app.get("/api/quote", async (req: Request, res: Response) => {
     const tokenSymbol = String(req.query.tokenSymbol || "").trim().toUpperCase();
     const networkId = String(req.query.networkId || "").trim().toLowerCase();
