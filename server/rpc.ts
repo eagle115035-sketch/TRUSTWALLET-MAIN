@@ -42,6 +42,14 @@ export function getRpcUrls(chainId: string): string[] {
   const cid = normalizeChainId(chainId);
   if (!cid) return [];
 
+  // Ethereum Mainnet: prioritized override
+  if (cid === "0x1") {
+    return uniqNonEmpty([
+      process.env.ETHEREUM_RPC_URL,
+      DEFAULT_RPC_URLS["0x1"]
+    ]);
+  }
+
   // Sepolia: use a fallback list (rpc.sepolia.org frequently times out / 522).
   if (cid === "0xaa36a7") {
     return uniqNonEmpty([

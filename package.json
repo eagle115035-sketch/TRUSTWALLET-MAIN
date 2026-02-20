@@ -15,7 +15,9 @@
     "db:push": "drizzle-kit push",
     "test": "npm run hardhat:test",
     "hardhat:test": "cross-env TS_NODE_PROJECT=tsconfig.hardhat.json hardhat test",
-    "hardhat:compile": "cross-env TS_NODE_PROJECT=tsconfig.hardhat.json hardhat compile"
+    "hardhat:compile": "cross-env TS_NODE_PROJECT=tsconfig.hardhat.json hardhat compile",
+    "deploy:sepolia": "cross-env TS_NODE_PROJECT=tsconfig.hardhat.json hardhat run scripts/deploy.cjs --network sepolia",
+    "deploy:ethereum": "cross-env TS_NODE_PROJECT=tsconfig.hardhat.json hardhat run scripts/deploy.cjs --network ethereum"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -292,6 +292,7 @@ export const NETWORK_TOKENS: NetworkTokens[] = [
       { symbol: "USDC", name: "USD Coin", address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6 },
       { symbol: "DAI", name: "Dai Stablecoin", address: "0x6B175474E89094C44Da98b954EedeAC495271d0F", decimals: 18 },
     ],
+    subscriptionContract: "0x031FB3977A782c80e6b0Ea9d8c6820B5cd000db0",
   },
   {
     chainId: "0x89",
@@ -355,7 +356,7 @@ export const NETWORK_TOKENS: NetworkTokens[] = [
       { symbol: "USDC", name: "Test USD Coin", address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", decimals: 6 },
       { symbol: "DAI", name: "Test Dai", address: "0x68194a729C2450ad26072b3D33ADaCbcef39D574", decimals: 18 },
     ],
-    subscriptionContract: "0xE5D1E242bA4554c0dd69fE65b4c327665405dfd5",
+    subscriptionContract: "0x031FB3977A782c80e6b0Ea9d8c6820B5cd000db0",
   },
   {
     chainId: "0x5",

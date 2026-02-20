@@ -30,7 +30,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {},
     ethereum: {
-      url: process.env.ETHEREUM_RPC_URL || "https://eth.llamarpc.com",
+      url: process.env.ETHEREUM_RPC_URL || "https://mainnet.infura.io/v3/3b801e8b02084ba68f55b81b9209c916",
       chainId: 1,
       accounts: NETWORK_ACCOUNTS,
     },
@@ -70,7 +70,7 @@ const config: HardhatUserConfig = {
       accounts: NETWORK_ACCOUNTS,
     },
     sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com",
+      url: process.env.SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/3b801e8b02084ba68f55b81b9209c916",
       chainId: 11155111,
       accounts: NETWORK_ACCOUNTS,
     },
