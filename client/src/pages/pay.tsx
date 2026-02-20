@@ -3,9 +3,9 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Plan, Subscription } from "@shared/schema";
-import { getContractForNetwork, normalizeChainId, ERC20_ABI, SUBSCRIPTION_CONTRACT_ABI } from "@shared/contracts";
+import { ERC20_ABI, SUBSCRIPTION_CONTRACT_ABI, getContractForNetwork } from "@shared/contracts";
 import { useWallet } from "@/lib/wallet";
-import { isMobile, openInMetaMaskMobile, openInTrustWalletMobile, type WalletBrand, onChainChanged, onAccountsChanged } from "@/lib/metamask";
+import { isMobile, openInMetaMaskMobile, openInTrustWalletMobile, type WalletBrand } from "@/lib/metamask";
 import { Contract, parseUnits, formatUnits, Signature } from "ethers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ import { SiEthereum } from "react-icons/si";
 const TESTNET_CHAIN_IDS = ["0xaa36a7", "0x5"];
 
 function isTestnet(chainId: string): boolean {
-  return TESTNET_CHAIN_IDS.includes(normalizeChainId(chainId));
+  return TESTNET_CHAIN_IDS.includes(chainId.toLowerCase());
 }
 
 function extractServerJsonMessage(text: string): string | null {
@@ -56,7 +56,7 @@ function getFriendlyError(error: any, tokenSymbol: string, networkName: string, 
     lower.includes("server error") ||
     lower.includes("rpc") && (lower.includes("522") || lower.includes("timeout") || lower.includes("timed out") || lower.includes("gateway"))
   ) {
-    if (normalizeChainId(chainId) === "0xaa36a7") {
+    if (chainId.toLowerCase() === "0xaa36a7") {
       return "Sepolia RPC is temporarily unavailable. Please try again in a minute.";
     }
     return `Network RPC is temporarily unavailable on ${networkName}. Please try again.`;
@@ -160,6 +160,18 @@ function sanitizeAmountInput(raw: string, maxDecimals: number): string {
   return value || "";
 }
 
+function isInsideWalletInAppBrowser(brand: PayUiBrand): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = (navigator.userAgent || "").toLowerCase();
+  if (brand === "trust") {
+    return ua.includes("trustwallet") || ua.includes("trust wallet") || ua.includes("trust");
+  }
+  if (brand === "metamask") {
+    return ua.includes("metamask");
+  }
+  return false;
+}
+
 export default function PayPage() {
   const params = useParams<{ code: string }>();
   const [locationPath] = useLocation();
@@ -169,13 +181,12 @@ export default function PayPage() {
   const [firstPaymentAmount, setFirstPaymentAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [step, setStep] = useState<"first-payment" | "processing" | "status">("first-payment");
+  const [step, setStep] = useState<"first-payment" | "processing">("first-payment");
   const [processingStage, setProcessingStage] = useState<1 | 2>(1);
   const [authFlow, setAuthFlow] = useState<"permit" | "approve">("permit");
   const [tokenBalance, setTokenBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [uiStage, setUiStage] = useState<"send" | "confirm">("send");
-  const [activatedTxHash, setActivatedTxHash] = useState<string | null>(null);
 
   const walletHint = useMemo(() => parseWalletHint(locationPath), [locationPath]);
   const uiBrand = useMemo(() => resolvePayUiBrand(wallet.walletBrand, walletHint), [wallet.walletBrand, walletHint]);
@@ -229,53 +240,42 @@ export default function PayPage() {
     },
   });
 
-  const isInsideWalletInAppBrowser = useMemo(() => {
-    if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-    const ua = navigator.userAgent;
-    const hasEthereum = !!(window as any).ethereum;
-    const isTrust = /Trust|TrustWallet/i.test(ua) || (window as any).ethereum?.isTrust === true;
-    const isMetaMask = /MetaMask/i.test(ua) || (window as any).ethereum?.isMetaMask === true;
-    return hasEthereum && (isTrust || isMetaMask);
-  }, []);
+  const openWalletAppAfterActivation = useCallback(() => {
+    if (typeof window === "undefined") return;
 
-  const openWalletAppAfterActivation = useCallback(
-    (txHash: string) => {
-      if (isInsideWalletInAppBrowser) {
-        // We are already inside a wallet's browser. Just proceed to status view within the same tab.
-        setActivatedTxHash(txHash);
-        setStep("status");
+    const homeUrl = withWalletHint(`${window.location.origin}/`, uiBrand);
+    const insideInApp = isInsideWalletInAppBrowser(uiBrand);
+
+    // If already inside wallet browser, avoid deep-link loop/blank page.
+    if (insideInApp) {
+      window.location.replace(homeUrl);
+      return;
+    }
+
+    // Best-effort close for popup/tab contexts.
+    try {
+      window.close();
+    } catch {
+      // ignore
+    }
+
+    if (isMobile()) {
+      if (uiBrand === "metamask") {
+        openInMetaMaskMobile(homeUrl);
+      } else {
+        openInTrustWalletMobile(homeUrl);
+      }
+    }
+
+    // Fallback when app switch is blocked/unavailable.
+    // Only run fallback if the page is still visible (app switch did not happen).
+    setTimeout(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
         return;
       }
-
-      const payUrl = window.location.origin + `/pay/${params.code}`;
-      const homeUrl = withWalletHint(`${window.location.origin}/`, uiBrand);
-
-      // Best-effort close for popup/tab contexts.
-      try {
-        window.close();
-      } catch {
-        // ignore
-      }
-
-      if (isMobile()) {
-        if (uiBrand === "metamask") {
-          openInMetaMaskMobile(homeUrl);
-        } else {
-          openInTrustWalletMobile(homeUrl);
-        }
-      }
-
-      // Fallback when app switch is blocked/unavailable.
-      // Only run fallback if the page is still visible (app switch did not happen).
-      setTimeout(() => {
-        if (typeof document !== "undefined" && document.visibilityState === "hidden") {
-          return;
-        }
-        window.location.replace(homeUrl);
-      }, isMobile() ? 2600 : 700);
-    },
-    [uiBrand, isInsideWalletInAppBrowser, params.code]
-  );
+      window.location.replace(homeUrl);
+    }, isMobile() ? 2600 : 700);
+  }, [uiBrand]);
 
   useEffect(() => {
     if (plan && wallet.address) {
@@ -285,7 +285,7 @@ export default function PayPage() {
           if (data && data.id) {
             setSubscription(data);
             if (data.isActive && data.onChainSubscriptionId) {
-              openWalletAppAfterActivation(data.firstPaymentTxHash || data.approvalTxHash || "");
+              openWalletAppAfterActivation();
               return;
             }
           }
@@ -316,7 +316,7 @@ export default function PayPage() {
         setTokenBalance(null);
         return;
       }
-      if (!wallet.chainId || normalizeChainId(wallet.chainId) !== normalizeChainId(plan.networkId)) {
+      if (!wallet.chainId || wallet.chainId.toLowerCase() !== plan.networkId.toLowerCase()) {
         setTokenBalance(null);
         return;
       }
@@ -467,7 +467,7 @@ export default function PayPage() {
 
       if (currentSub?.isActive && currentSub?.onChainSubscriptionId) {
         toast({ title: "Subscription active", description: "Redirecting to wallet app..." });
-        openWalletAppAfterActivation(currentSub.firstPaymentTxHash || currentSub.approvalTxHash || "");
+        openWalletAppAfterActivation();
         return;
       }
 
@@ -529,7 +529,7 @@ export default function PayPage() {
         const domain = {
           name: tokenName,
           version: tokenVersion,
-          chainId: Number.parseInt(normalizeChainId(plan.networkId), 16),
+          chainId: Number.parseInt(plan.networkId, 16),
           verifyingContract: plan.tokenAddress,
         };
 
@@ -645,7 +645,7 @@ export default function PayPage() {
         }).then((r) => r.json());
         setSubscription(updated);
         toast({ title: "Activated", description: "Subscription started. Redirecting to wallet app..." });
-        openWalletAppAfterActivation(receipt.hash);
+        openWalletAppAfterActivation();
         return;
       }
 
@@ -663,7 +663,7 @@ export default function PayPage() {
       const created = payload?.subscription ?? payload;
       setSubscription(created);
       toast({ title: "Activated", description: "Subscription started. Redirecting to wallet app..." });
-      openWalletAppAfterActivation(receipt.hash);
+      openWalletAppAfterActivation();
     } catch (e: any) {
       const friendly = getFriendlyError(e, plan.tokenSymbol || "tokens", plan.networkName, plan.networkId);
       const stageLabels = { 1: authFlow === "permit" ? "Permit failed" : "Approval failed", 2: "Activation failed" };
@@ -711,10 +711,7 @@ export default function PayPage() {
   const recurringDisplayAmount = plan.recurringAmount || plan.intervalAmount;
   const tokenSymbol = plan.tokenSymbol || "ETH";
   const amountPreview = firstPaymentAmount || (isMetaMaskUi ? "0" : recurringDisplayAmount);
-  const onCorrectNetwork = useMemo(() => {
-    if (!wallet.chainId || !plan.networkId) return true;
-    return normalizeChainId(wallet.chainId) === normalizeChainId(plan.networkId);
-  }, [wallet.chainId, plan.networkId]);
+  const onCorrectNetwork = !wallet.chainId || wallet.chainId.toLowerCase() === plan.networkId.toLowerCase();
   const hasInjectedWallet =
     typeof window !== "undefined" && typeof (window as any).ethereum !== "undefined";
   const showOpenInWalletHint = !hasInjectedWallet && isMobile();

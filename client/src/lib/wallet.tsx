@@ -7,9 +7,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { normalizeChainId } from "@shared/contracts";
 import { BrowserProvider, type JsonRpcSigner } from "ethers";
-import { detectWalletBrand, getInjectedProvider, isMetaMaskInstalled, type WalletBrand } from "./metamask";
+import { detectWalletBrand, isMetaMaskInstalled, type WalletBrand } from "./metamask";
 
 // This project intentionally supports *only* injected EIP-1193 wallets.
 // Examples: MetaMask extension, Trust Wallet in-app browser, etc.
@@ -42,6 +41,15 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
+function getInjectedProvider(): Eip1193Provider {
+  if (!isMetaMaskInstalled()) {
+    throw new Error(
+      "Wallet not detected. Open this page in your wallet's in-app browser (MetaMask / Trust Wallet) or install an injected wallet extension.",
+    );
+  }
+  return window.ethereum as Eip1193Provider;
+}
+
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [connector, setConnector] = useState<WalletConnector | null>(null);
   const [address, setAddress] = useState<string | null>(null);
@@ -73,21 +81,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       try {
         const provider = getInjectedProvider();
         const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
-        if (accounts.length === 0) throw new Error("No accounts connected");
         const addr = accounts?.[0];
         if (!addr) throw new Error("No account returned from wallet");
-
-        const chainIdRaw = await provider.request({ method: "eth_chainId" });
-        const chainId = normalizeChainId(chainIdRaw as string);
+        const injectedChainId = (await provider.request({ method: "eth_chainId" })) as string;
         const brand = detectWalletBrand(provider as any);
 
         setConnector("injected");
         setEip1193Provider(provider);
         setAddress(addr);
-        setChainId(chainId);
+        setChainId(injectedChainId);
         setWalletBrand(brand);
 
-        return { address: addr, chainId: chainId, connector: "injected" };
+        return { address: addr, chainId: injectedChainId, connector: "injected" };
       } finally {
         connectingRef.current = false;
         setConnecting(false);
@@ -107,7 +112,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const ensureChain = useCallback(
     async (targetChainIdHex: string, networkName?: string): Promise<void> => {
       if (!eip1193Provider) throw new Error("Wallet not connected");
-      const current = normalizeChainId((await eip1193Provider.request({ method: "eth_chainId" })) as string);
+      const current = (await eip1193Provider.request({ method: "eth_chainId" })) as string;
       if (current?.toLowerCase() === targetChainIdHex.toLowerCase()) {
         setChainId(current);
         return;
@@ -123,7 +128,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         throw new Error(`Please switch your wallet to ${name} (${targetChainIdHex}) and try again.`);
       }
 
-      const after = normalizeChainId((await eip1193Provider.request({ method: "eth_chainId" })) as string);
+      const after = (await eip1193Provider.request({ method: "eth_chainId" })) as string;
       setChainId(after);
     },
     [eip1193Provider],
@@ -157,7 +162,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         const addr = accounts?.[0];
         if (!addr) return;
 
-        const injectedChainId = normalizeChainId((await provider.request({ method: "eth_chainId" })) as string);
+        const injectedChainId = (await provider.request({ method: "eth_chainId" })) as string;
         if (cancelled) return;
 
         setConnector("injected");
@@ -186,14 +191,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       if (!addr) {
         setConnector(null);
         setEip1193Provider(null);
-        setAddress(null);
         setChainId(null);
         setWalletBrand(null);
       }
     };
 
     const handleChainChanged = (chainIdUnknown: unknown) => {
-      const newChainId = typeof chainIdUnknown === "string" ? normalizeChainId(chainIdUnknown) : null;
+      const newChainId = typeof chainIdUnknown === "string" ? chainIdUnknown : null;
       if (newChainId) setChainId(newChainId);
     };
 

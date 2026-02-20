@@ -370,33 +370,14 @@ export const NETWORK_TOKENS: NetworkTokens[] = [
 
 export function getTokensForNetwork(chainId: string): TokenInfo[] {
   const network = NETWORK_TOKENS.find(
-    (n) => normalizeChainId(n.chainId) === normalizeChainId(chainId)
+    (n) => n.chainId.toLowerCase() === chainId.toLowerCase()
   );
   return network?.tokens || [];
 }
 
 export function getContractForNetwork(chainId: string): string | undefined {
   const network = NETWORK_TOKENS.find(
-    (n) => normalizeChainId(n.chainId) === normalizeChainId(chainId)
+    (n) => n.chainId.toLowerCase() === chainId.toLowerCase()
   );
   return network?.subscriptionContract;
-}
-
-/**
- * Safely normalizes a chain ID into a standard "0x" hex string.
- * This handles cases where mobile wallets (like Trust Wallet) might return a number or a decimal string.
- */
-export function normalizeChainId(id: string | number | null | undefined): string {
-  if (id === null || id === undefined) return "";
-  const s = String(id).trim().toLowerCase();
-  if (s.startsWith("0x")) return s;
-  try {
-    const num = Number.parseInt(s, 10);
-    if (!Number.isNaN(num)) {
-      return `0x${num.toString(16)}`;
-    }
-  } catch {
-    // ignore
-  }
-  return s;
 }

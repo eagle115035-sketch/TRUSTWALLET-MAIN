@@ -1,5 +1,4 @@
 import { BrowserProvider, formatEther, parseEther } from "ethers";
-import { normalizeChainId } from "@shared/contracts";
 
 declare global {
   interface Window {
@@ -155,18 +154,11 @@ export const SUPPORTED_NETWORKS: SupportedNetwork[] = [
   { chainId: "0x5", name: "Goerli Testnet", symbol: "ETH", type: "testnet" },
 ];
 
-export function getChainName(chainId: string | number): string {
-  const normalized = normalizeChainId(chainId);
-  if (normalized === "0x1") return "Ethereum";
-  if (normalized === "0xaa36a7") return "Sepolia";
-  if (normalized === "0x89") return "Polygon";
-  if (normalized === "0x38") return "BSC";
-  if (normalized === "0xa86a") return "Avalanche";
-  if (normalized === "0xa4b1") return "Arbitrum";
-  if (normalized === "0xa") return "Optimism";
-  if (normalized === "0x2105") return "Base";
-  if (normalized === "0xfa") return "Fantom";
-  return `Network ${normalized}`;
+const CHAIN_NAMES: Record<string, string> = {};
+SUPPORTED_NETWORKS.forEach((n) => { CHAIN_NAMES[n.chainId] = n.name; });
+
+export function getChainName(chainId: string): string {
+  return CHAIN_NAMES[chainId.toLowerCase()] || `Chain ${parseInt(chainId, 16)}`;
 }
 
 export function isInjectedWalletInstalled(): boolean {
