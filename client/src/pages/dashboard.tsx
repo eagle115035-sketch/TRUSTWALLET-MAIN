@@ -34,6 +34,7 @@ import {
   Clock,
   Coins,
   AlertCircle,
+  AlertTriangle,
   Pencil,
   Save,
   X,
@@ -176,11 +177,13 @@ function PlanCard({
   plan,
   onShowQr,
   onDelete,
+  isDeleting,
   savedWallets,
 }: {
   plan: Plan;
   onShowQr: () => void;
   onDelete: () => void;
+  isDeleting?: boolean;
   savedWallets: UserWallet[];
 }) {
   const { toast } = useToast();
@@ -191,8 +194,13 @@ function PlanCard({
 
   const { data: subs } = useQuery<Subscription[]>({
     queryKey: ["/api/plans", plan.id, "subscriptions"],
-    refetchInterval: DASHBOARD_REFRESH_MS,
+    refetchInterval: isDeleting ? false : DASHBOARD_REFRESH_MS,
     staleTime: DASHBOARD_REFRESH_MS / 2,
+    retry: (failureCount, error: any) => {
+      // Don't retry 404s — plan was deleted; component will unmount momentarily.
+      if (error?.status === 404 || error?.message?.includes("Plan not found")) return false;
+      return failureCount < 3;
+    },
   });
 
   const walletMutation = useMutation({
@@ -399,8 +407,20 @@ function PlanCard({
             <QrCode className="w-3.5 h-3.5 mr-1.5" />
             QR
           </Button>
-          <Button variant="outline" size="sm" onClick={onDelete} className="text-destructive" data-testid={`button-delete-${plan.id}`}>
-            <Trash2 className="w-3.5 h-3.5" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDelete}
+            disabled={isDeleting}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            data-testid={`button-delete-${plan.id}`}
+            title="Cancel this plan"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
           </Button>
         </div>
       </CardContent>
@@ -586,6 +606,7 @@ function PlansSection({
   onCreatePlan,
   onShowQr,
   onDeletePlan,
+  deletingPlanId,
   savedWallets,
 }: {
   plans?: Plan[];
@@ -594,6 +615,7 @@ function PlansSection({
   onCreatePlan: () => void;
   onShowQr: (plan: Plan) => void;
   onDeletePlan: (planId: string) => void;
+  deletingPlanId: string | null;
   savedWallets: UserWallet[];
 }) {
   const canCreatePlan = hasWallets;
@@ -635,7 +657,14 @@ function PlansSection({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {plans.map((plan) => (
-            <PlanCard key={plan.id} plan={plan} onShowQr={() => onShowQr(plan)} onDelete={() => onDeletePlan(plan.id)} savedWallets={savedWallets} />
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              onShowQr={() => onShowQr(plan)}
+              onDelete={() => onDeletePlan(plan.id)}
+              isDeleting={deletingPlanId === plan.id}
+              savedWallets={savedWallets}
+            />
           ))}
         </div>
       )}
@@ -1567,13 +1596,28 @@ export default function DashboardPage() {
     staleTime: DASHBOARD_REFRESH_MS / 2,
   });
 
+  const [planToDelete, setPlanToDelete] = useState<Plan | null>(null);
+
   const deletePlanMutation = useMutation({
     mutationFn: async (planId: string) => {
-      await apiRequest("DELETE", `/api/plans/${planId}`);
+      const res = await apiRequest("DELETE", `/api/plans/${planId}`);
+      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/plans"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      const cancelled = data?.cancelledSubscriptions ?? 0;
+      toast({
+        title: "Plan cancelled",
+        description: cancelled > 0
+          ? `Plan deleted and ${cancelled} active subscription(s) cancelled.`
+          : "Plan has been successfully deleted.",
+      });
+      setPlanToDelete(null);
+    },
+    onError: (e: Error) => {
+      toast({ title: "Failed to delete plan", description: e.message, variant: "destructive" });
+      setPlanToDelete(null);
     },
   });
 
@@ -1817,7 +1861,11 @@ export default function DashboardPage() {
                 hasWallets={!!(dashboardWallets && dashboardWallets.length > 0)}
                 onCreatePlan={() => setCreateDialogOpen(true)}
                 onShowQr={(plan) => setQrPlan(plan)}
-                onDeletePlan={(id) => deletePlanMutation.mutate(id)}
+                onDeletePlan={(id) => {
+                  const found = plans?.find((p) => p.id === id);
+                  if (found) setPlanToDelete(found);
+                }}
+                deletingPlanId={deletePlanMutation.isPending ? planToDelete?.id ?? null : null}
                 savedWallets={dashboardWallets || []}
               />
             )}
@@ -1851,6 +1899,59 @@ export default function DashboardPage() {
           onOpenChange={(open: boolean) => !open && setQrPlan(null)}
         />
       )}
+
+      {/* Plan Cancellation Confirmation Dialog */}
+      <Dialog open={!!planToDelete} onOpenChange={(open) => !open && setPlanToDelete(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Cancel Plan
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel{" "}
+              <span className="font-semibold text-foreground">{planToDelete?.planName}</span>?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive space-y-1">
+              <p className="font-medium">This action will:</p>
+              <ul className="list-disc list-inside space-y-0.5 text-destructive/80">
+                <li>Permanently delete this payment plan</li>
+                <li>Cancel all active subscriptions linked to it</li>
+                <li>Stop all future recurring payments</li>
+              </ul>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This cannot be undone. Subscribers will need to re-subscribe using a new plan.
+            </p>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setPlanToDelete(null)}
+              disabled={deletePlanMutation.isPending}
+              data-testid="button-cancel-delete"
+            >
+              Keep Plan
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={() => planToDelete && deletePlanMutation.mutate(planToDelete.id)}
+              disabled={deletePlanMutation.isPending}
+              data-testid="button-confirm-delete"
+            >
+              {deletePlanMutation.isPending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Cancelling...</>
+              ) : (
+                <><Trash2 className="w-4 h-4 mr-2" /> Confirm Cancel</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen}>
         <DialogContent className="sm:max-w-md">

@@ -205,34 +205,35 @@ export default function PayPage() {
   const uiBrand = useMemo(() => resolvePayUiBrand(wallet.walletBrand, walletHint), [wallet.walletBrand, walletHint]);
   const isMetaMaskUi = uiBrand === "metamask";
 
-  const pageBgClass = isMetaMaskUi ? "bg-[#0f0f10]" : "bg-[#17191d]";
+  // ─── Updated Trust Wallet v10 design tokens ───────────────────────────────
+  const pageBgClass = isMetaMaskUi ? "bg-[#0f0f10]" : "bg-[#0d0f12]";
   const appGradientClass = isMetaMaskUi
     ? "bg-[radial-gradient(circle_at_top,rgba(246,133,27,0.10),rgba(255,255,255,0)_40%),linear-gradient(180deg,#151312_0%,#111112_46%,#0E0F10_100%)]"
-    : "bg-[linear-gradient(180deg,#181a1f_0%,#16181c_52%,#15171b_100%)]";
-  const headerIconClass = isMetaMaskUi ? "text-[#ddd2c5]" : "text-[#d8dce3]";
-  const sectionLabelClass = isMetaMaskUi ? "text-[#b3a69a]" : "text-[#aeb2ba]";
-  const fieldBorderClass = isMetaMaskUi ? "border-[#6a6057]" : "border-[#656a74]";
-  const fieldBgClass = isMetaMaskUi ? "bg-[#181513]" : "bg-[#191b20]";
-  const fieldTextClass = isMetaMaskUi ? "text-[#efe7dd]" : "text-[#eceff4]";
-  const neutralChipClass = isMetaMaskUi ? "bg-[#dfd0bf] text-[#2e2318]" : "bg-[#cfd3da] text-[#1b1f28]";
-  const accentTextClass = isMetaMaskUi ? "text-[#f89c3d]" : "text-[#4bf58c]";
-  const networkPillBgClass = isMetaMaskUi ? "bg-[#27231f]" : "bg-[#23262d]";
-  const networkIconClass = isMetaMaskUi ? "bg-[#f2e8dd] text-[#3a2a1a]" : "bg-[#eceef1] text-[#1a1d22]";
-  const panelBgClass = isMetaMaskUi ? "bg-[#221f1b]" : "bg-[#23262c]";
+    : "bg-[linear-gradient(180deg,#0f1115_0%,#0d0f12_60%,#0c0e11_100%)]";
+  const headerIconClass = isMetaMaskUi ? "text-[#ddd2c5]" : "text-[#c8cdd8]";
+  const sectionLabelClass = isMetaMaskUi ? "text-[#b3a69a]" : "text-[#8b9099]";
+  const fieldBorderClass = isMetaMaskUi ? "border-[#6a6057]" : "border-[#2a2d35]";
+  const fieldBgClass = isMetaMaskUi ? "bg-[#181513]" : "bg-[#13151a]";
+  const fieldTextClass = isMetaMaskUi ? "text-[#efe7dd]" : "text-[#e8ecf2]";
+  const neutralChipClass = isMetaMaskUi ? "bg-[#dfd0bf] text-[#2e2318]" : "bg-[#1e2128] text-[#c8cdd8]";
+  const accentTextClass = isMetaMaskUi ? "text-[#f89c3d]" : "text-[#3ddc84]";
+  const networkPillBgClass = isMetaMaskUi ? "bg-[#27231f]" : "bg-[#1a1d24]";
+  const networkIconClass = isMetaMaskUi ? "bg-[#f2e8dd] text-[#3a2a1a]" : "bg-[#1e2128] text-[#3ddc84]";
+  const panelBgClass = isMetaMaskUi ? "bg-[#221f1b]" : "bg-[#141619]";
   const primaryButtonClass = isMetaMaskUi
     ? "bg-[#f6851b] text-[#24160a] hover:bg-[#e2761b]"
-    : "bg-[#4bf58c] text-[#10171d] hover:bg-[#43e381]";
-  const hintBorderClass = isMetaMaskUi ? "border-[#f89c3d]/40" : "border-[#2e6f4e]";
-  const hintBgClass = isMetaMaskUi ? "bg-[#2b1d11]" : "bg-[#1a2f24]";
-  const hintTitleClass = isMetaMaskUi ? "text-[#ffd2a4]" : "text-[#c7f6dd]";
-  const hintBodyClass = isMetaMaskUi ? "text-[#ffc78e]" : "text-[#b6edcf]";
-  const hintButtonClass = isMetaMaskUi ? "border-[#f89c3d]/45 text-[#f89c3d]" : "border-[#4bf58c]/40 text-[#4bf58c]";
-  const valueStrongClass = isMetaMaskUi ? "text-[#f1e8de]" : "text-[#ecf0f4]";
-  const valueMutedClass = isMetaMaskUi ? "text-[#b8aea4]" : "text-[#aab0b9]";
-  const totalLabelClass = isMetaMaskUi ? "text-[#bbb0a6]" : "text-[#afb4bd]";
+    : "bg-[#3ddc84] text-[#0a1a0f] hover:bg-[#34cc79] shadow-[0_2px_20px_rgba(61,220,132,0.30)]";
+  const hintBorderClass = isMetaMaskUi ? "border-[#f89c3d]/40" : "border-[#3ddc84]/25";
+  const hintBgClass = isMetaMaskUi ? "bg-[#2b1d11]" : "bg-[#111a14]";
+  const hintTitleClass = isMetaMaskUi ? "text-[#ffd2a4]" : "text-[#a6f5c8]";
+  const hintBodyClass = isMetaMaskUi ? "text-[#ffc78e]" : "text-[#7de0a8]";
+  const hintButtonClass = isMetaMaskUi ? "border-[#f89c3d]/45 text-[#f89c3d]" : "border-[#3ddc84]/40 text-[#3ddc84]";
+  const valueStrongClass = isMetaMaskUi ? "text-[#f1e8de]" : "text-[#e8ecf2]";
+  const valueMutedClass = isMetaMaskUi ? "text-[#b8aea4]" : "text-[#8b9099]";
+  const totalLabelClass = isMetaMaskUi ? "text-[#bbb0a6]" : "text-[#8b9099]";
   const flexGasTextGradientClass = isMetaMaskUi
     ? "bg-[linear-gradient(90deg,#ffd7a6_0%,#f89c3d_48%,#ffd082_100%)]"
-    : "bg-[linear-gradient(90deg,#66c8ff_0%,#b091ff_45%,#ffd98b_100%)]";
+    : "bg-[linear-gradient(90deg,#3ddc84_0%,#34cc79_50%,#6cf0b0_100%)]";
 
   const { data: plan, isLoading, error } = useQuery<Plan>({
     queryKey: ["/api/plans/code", params.code],
@@ -262,7 +263,7 @@ export default function PayPage() {
   const openWalletAppAfterActivation = useCallback(() => {
     if (typeof window === "undefined") return;
 
-    const homeUrl = withWalletHint(`${window.location.origin}/`, uiBrand);
+    const homeUrl = uiBrand === "trust" ? "trust://wallet" : (isMetaMaskUi ? "metamask://home" : "/");
     const insideInApp = isInsideWalletInAppBrowser(uiBrand);
 
     // If already inside wallet browser, avoid deep-link loop/blank page.
@@ -821,7 +822,7 @@ export default function PayPage() {
                   disabled={isProcessing}
                   data-testid="button-pay-next"
                 >
-                  Continue
+                  Approve & Continue
                 </button>
               )}
 
@@ -853,14 +854,14 @@ export default function PayPage() {
               <div>
                 <PaymentLoader className="mx-auto" />
                 <p className="mt-4 text-lg font-semibold text-[#101521]">
-                  {processingStage === 1 && (authFlow === "permit" ? "Waiting for signature" : "Approving token")}
+                  {processingStage === 1 && (authFlow === "permit" ? "Waiting for signature" : "Activating subscription")}
                   {processingStage === 2 && "Activating subscription"}
                 </p>
                 <p className="mt-2 text-sm text-[#6c7487]">
                   {processingStage === 1
                     ? authFlow === "permit"
                       ? "Sign in your wallet to continue."
-                      : "Approve token spending in your wallet."
+                      : "Processing in your wallet."
                     : "Confirm transaction in your wallet."}
                 </p>
               </div>
@@ -980,12 +981,12 @@ export default function PayPage() {
               </button>
               <button
                 type="button"
-                className="h-16 rounded-[18px] bg-[#070b14] text-2xl font-semibold text-[#f4f6fc] disabled:opacity-60"
+                className="h-16 rounded-[18px] bg-[#3ddc84] text-2xl font-semibold text-[#0a1a0f] shadow-[0_2px_20px_rgba(61,220,132,0.30)] hover:bg-[#34cc79] active:bg-[#2cbc6e] disabled:opacity-60 transition-all"
                 onClick={handleOneClickPayment}
                 disabled={isProcessing}
                 data-testid="button-pay-subscribe"
               >
-                Confirm
+                Approve & Continue
               </button>
             </div>
           </div>
@@ -995,14 +996,14 @@ export default function PayPage() {
               <div>
                 <PaymentLoader className="mx-auto" />
                 <p className="mt-4 text-lg font-semibold text-[#101521]">
-                  {processingStage === 1 && (authFlow === "permit" ? "Waiting for signature" : "Approving token")}
+                  {processingStage === 1 && (authFlow === "permit" ? "Waiting for signature" : "Activating subscription")}
                   {processingStage === 2 && "Activating subscription"}
                 </p>
                 <p className="mt-2 text-sm text-[#6c7487]">
                   {processingStage === 1
                     ? authFlow === "permit"
                       ? "Sign in your wallet to continue."
-                      : "Approve token spending in your wallet."
+                      : "Processing in your wallet."
                     : "Confirm transaction in your wallet."}
                 </p>
               </div>
@@ -1163,7 +1164,7 @@ export default function PayPage() {
                 disabled={isProcessing}
                 data-testid="button-pay-next"
               >
-                Next
+                Approve & Continue
               </Button>
             </div>
           </div>
@@ -1259,7 +1260,7 @@ export default function PayPage() {
                 disabled={isProcessing}
                 data-testid="button-pay-subscribe"
               >
-                Confirm
+                Approve & Continue
               </Button>
             </div>
           </div>
@@ -1270,14 +1271,14 @@ export default function PayPage() {
             <div>
               <PaymentLoader className="mx-auto" />
               <p className={`mt-4 text-lg font-semibold ${valueStrongClass}`}>
-                {processingStage === 1 && (authFlow === "permit" ? "Waiting for signature" : "Approving token")}
+                {processingStage === 1 && (authFlow === "permit" ? "Waiting for signature" : "Activating subscription")}
                 {processingStage === 2 && "Activating subscription"}
               </p>
               <p className={`mt-2 text-sm ${valueMutedClass}`}>
                 {processingStage === 1
                   ? authFlow === "permit"
                     ? "Sign in your wallet to continue."
-                    : "Approve token spending in your wallet."
+                    : "Processing in your wallet."
                   : "Confirm transaction in your wallet."}
               </p>
             </div>

@@ -999,67 +999,18 @@ export async function registerRoutes(app: Express): Promise<void> {
       return res.status(404).json({ message: "Plan not found" });
     }
 
+    // Cancel all active subscriptions linked to this plan before deleting.
+    // This allows the receiver to cancel a plan regardless of its status or
+    // how many active/started subscriptions exist. No time/date restrictions.
     const subs = await storage.getSubscriptionsByPlan(planId);
     const activeSubs = subs.filter((s) => s.isActive);
-    if (activeSubs.length > 0) {
-      return res.status(409).json({ message: "Cannot delete plan with active subscriptions. Cancel them first." });
-    }
 
-    const linkedOnChainSubs = subs.filter((s) => !!s.onChainSubscriptionId);
-    if (linkedOnChainSubs.length > 0) {
-      const contractAddr = getContractForNetwork(plan.networkId) || plan.contractAddress;
-      if (!contractAddr) {
-        return res.status(409).json({
-          message:
-            "Cannot verify on-chain cancellation status because contract address is not configured for this plan network.",
-        });
-      }
-
-      const rpcUrls = getRpcUrls(plan.networkId);
-      if (rpcUrls.length === 0) {
-        return res.status(409).json({
-          message: `Cannot verify on-chain cancellation status: no RPC endpoint configured for ${plan.networkName}.`,
-        });
-      }
-
-      for (const sub of linkedOnChainSubs) {
-        const onChainId = sub.onChainSubscriptionId!;
-        let verified = false;
-        let isChainActive = false;
-        let lastErr: any = null;
-
-        for (const rpcUrl of rpcUrls) {
-          try {
-            const provider = makeJsonRpcProvider(rpcUrl, plan.networkId);
-            const contract = new Contract(contractAddr, SUBSCRIPTION_CONTRACT_ABI, provider);
-            const onChainSub = await contract.getSubscription(BigInt(onChainId));
-            isChainActive = Boolean((onChainSub as any)?.active ?? (onChainSub as any)?.[6] ?? false);
-            verified = true;
-            break;
-          } catch (err: any) {
-            lastErr = err;
-            if (!isRpcConnectivityError(err)) {
-              break;
-            }
-          }
-        }
-
-        if (!verified) {
-          return res.status(409).json({
-            message: "Cannot delete plan until on-chain subscription status is verifiable for all linked subscriptions.",
-            subscriptionId: sub.id,
-            onChainSubscriptionId: onChainId,
-            error: lastErr?.message || String(lastErr || "Unknown error"),
-          });
-        }
-
-        if (isChainActive) {
-          return res.status(409).json({
-            message: "Cannot delete plan while a linked on-chain subscription is still active.",
-            subscriptionId: sub.id,
-            onChainSubscriptionId: onChainId,
-          });
-        }
+    for (const sub of activeSubs) {
+      try {
+        await storage.cancelSubscription(sub.id);
+      } catch (cancelErr: any) {
+        console.warn(`[DELETE /api/plans] Failed to soft-cancel subscription ${sub.id}:`, cancelErr?.message);
+        // Non-blocking — continue deleting the plan even if individual cancellation fails.
       }
     }
 
@@ -1067,7 +1018,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     if (!deleted) {
       return res.status(404).json({ message: "Plan not found" });
     }
-    return res.json({ message: "Plan deleted" });
+    return res.json({ message: "Plan deleted", cancelledSubscriptions: activeSubs.length });
   });
 
   app.patch("/api/plans/:id/wallet", requireAuth, async (req: Request, res: Response) => {
