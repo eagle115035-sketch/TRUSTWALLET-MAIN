@@ -15,12 +15,14 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowUpDown,
+  BookUser,
   ChevronDown,
   ChevronRight,
   Copy,
   Delete as DeleteIcon,
   Info,
   QrCode,
+  ScanLine,
   Settings,
   Wallet,
   X,
@@ -206,14 +208,14 @@ export default function PayPage() {
   const isMetaMaskUi = uiBrand === "metamask";
 
   // ─── Updated Trust Wallet v10 design tokens ───────────────────────────────
-  const pageBgClass = isMetaMaskUi ? "bg-[#0f0f10]" : "bg-[#0d0f12]";
+  const pageBgClass = isMetaMaskUi ? "bg-[#0f0f10]" : "bg-[#0a0b0d]";
   const appGradientClass = isMetaMaskUi
     ? "bg-[radial-gradient(circle_at_top,rgba(246,133,27,0.10),rgba(255,255,255,0)_40%),linear-gradient(180deg,#151312_0%,#111112_46%,#0E0F10_100%)]"
-    : "bg-[linear-gradient(180deg,#0f1115_0%,#0d0f12_60%,#0c0e11_100%)]";
+    : "bg-[linear-gradient(180deg,#0c0d0f_0%,#0a0b0d_60%,#090a0c_100%)]";
   const headerIconClass = isMetaMaskUi ? "text-[#ddd2c5]" : "text-[#c8cdd8]";
   const sectionLabelClass = isMetaMaskUi ? "text-[#b3a69a]" : "text-[#8b9099]";
-  const fieldBorderClass = isMetaMaskUi ? "border-[#6a6057]" : "border-[#2a2d35]";
-  const fieldBgClass = isMetaMaskUi ? "bg-[#181513]" : "bg-[#13151a]";
+  const fieldBorderClass = isMetaMaskUi ? "border-[#6a6057]" : "border-[#2b3d30]";
+  const fieldBgClass = isMetaMaskUi ? "bg-[#181513]" : "bg-transparent";
   const fieldTextClass = isMetaMaskUi ? "text-[#efe7dd]" : "text-[#e8ecf2]";
   const neutralChipClass = isMetaMaskUi ? "bg-[#dfd0bf] text-[#2e2318]" : "bg-[#1e2128] text-[#c8cdd8]";
   const accentTextClass = isMetaMaskUi ? "text-[#f89c3d]" : "text-[#3ddc84]";
@@ -222,7 +224,7 @@ export default function PayPage() {
   const panelBgClass = isMetaMaskUi ? "bg-[#221f1b]" : "bg-[#141619]";
   const primaryButtonClass = isMetaMaskUi
     ? "bg-[#f6851b] text-[#24160a] hover:bg-[#e2761b]"
-    : "bg-[#3ddc84] text-[#0a1a0f] hover:bg-[#34cc79] shadow-[0_2px_20px_rgba(61,220,132,0.30)]";
+    : "bg-[#2a6e45] text-[#b8e8cc] hover:bg-[#327d50]";
   const hintBorderClass = isMetaMaskUi ? "border-[#f89c3d]/40" : "border-[#3ddc84]/25";
   const hintBgClass = isMetaMaskUi ? "bg-[#2b1d11]" : "bg-[#111a14]";
   const hintTitleClass = isMetaMaskUi ? "text-[#ffd2a4]" : "text-[#a6f5c8]";
@@ -1032,28 +1034,16 @@ export default function PayPage() {
               <div className="absolute right-0 top-1 h-10 w-10" />
             </header>
 
-            <section className="mt-7 space-y-3.5">
-              <p className={`text-[17px] font-semibold ${sectionLabelClass}`}>Address or Domain Name</p>
-              <div className={`rounded-[17px] border ${fieldBorderClass} ${fieldBgClass} px-4 py-3.5`}>
-                <div className="flex items-center gap-3">
-                  <div className={`min-w-0 flex-1 truncate text-[18px] font-semibold tracking-[0.01em] ${fieldTextClass}`}>
-                    {destinationAddressDisplay}
+            <section className="mt-7 space-y-2.5">
+              <p className={`text-[14px] font-medium ${sectionLabelClass}`}>Address or Domain Name</p>
+              <div className={`rounded-[12px] border ${fieldBorderClass} px-3.5 py-3`}>
+                <div className="flex items-center gap-2.5">
+                  <div className={`min-w-0 flex-1 truncate text-[15px] tracking-[0.01em] ${fieldTextClass}`}>
+                    {plan.walletAddress ? destinationAddressDisplay : "Search or Enter"}
                   </div>
                   <button
                     type="button"
-                    className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${neutralChipClass}`}
-                    onClick={() =>
-                      toast({
-                        title: "Recipient is fixed",
-                        description: "This payment link already has the destination address.",
-                      })
-                    }
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    className={`text-[18px] font-semibold ${accentTextClass}`}
+                    className={`text-[15px] font-semibold ${accentTextClass}`}
                     onClick={() =>
                       toast({
                         title: "Recipient is fixed",
@@ -1065,55 +1055,47 @@ export default function PayPage() {
                   </button>
                   <button
                     type="button"
-                    className={`inline-flex h-9 w-9 items-center justify-center ${accentTextClass}`}
+                    className={`inline-flex h-8 w-8 items-center justify-center ${accentTextClass}`}
                     onClick={copyDestinationAddress}
                     data-testid="button-copy-destination"
                   >
-                    <Copy className="h-[22px] w-[22px]" />
+                    <BookUser className="h-[20px] w-[20px]" />
                   </button>
-                  <button type="button" className={`inline-flex h-9 w-9 items-center justify-center ${accentTextClass}`}>
-                    <QrCode className="h-[22px] w-[22px]" />
+                  <button type="button" className={`inline-flex h-8 w-8 items-center justify-center ${accentTextClass}`}>
+                    <ScanLine className="h-[20px] w-[20px]" />
                   </button>
                 </div>
               </div>
             </section>
 
-            <section className="mt-8 space-y-3.5">
-              <p className={`text-[17px] font-semibold ${sectionLabelClass}`}>Destination network</p>
-              <div className={`inline-flex items-center gap-3 rounded-full ${networkPillBgClass} px-3.5 py-2.5`}>
-                <div className={`flex h-9 w-9 items-center justify-center rounded-full ${networkIconClass}`}>
-                  <SiEthereum className="h-5 w-5" />
+            <section className="mt-6 space-y-2.5">
+              <p className={`text-[14px] font-medium ${sectionLabelClass}`}>Destination network</p>
+              <div className={`inline-flex items-center gap-2 rounded-full ${networkPillBgClass} px-3 py-1.5`}>
+                <div className={`flex h-6 w-6 items-center justify-center rounded-full ${networkIconClass}`}>
+                  <SiEthereum className="h-3.5 w-3.5" />
                 </div>
-                <div className={`text-[17px] font-semibold ${fieldTextClass}`}>{plan.networkName}</div>
-                <ChevronDown className={`h-4 w-4 ${valueMutedClass}`} />
+                <div className={`text-[14px] font-medium ${fieldTextClass}`}>{plan.networkName.split(' ')[0]}</div>
+                <ChevronDown className={`h-3.5 w-3.5 ${valueMutedClass}`} />
               </div>
             </section>
 
-            <section className="mt-8 space-y-3.5">
-              <p className={`text-[17px] font-semibold ${sectionLabelClass}`}>Amount</p>
-              <div className={`rounded-[17px] border ${fieldBorderClass} ${fieldBgClass} px-4 py-3.5`}>
-                <div className="flex items-center gap-3">
+            <section className="mt-6 space-y-2.5">
+              <p className={`text-[14px] font-medium ${sectionLabelClass}`}>Amount</p>
+              <div className={`rounded-[12px] border ${fieldBorderClass} px-3.5 py-3`}>
+                <div className="flex items-center gap-2.5">
                   <Input
                     type="number"
                     step="any"
                     inputMode="decimal"
+                    placeholder={`${tokenSymbol} Amount`}
                     value={firstPaymentAmount}
                     onChange={(e) => setFirstPaymentAmount(e.target.value)}
-                    className={`h-auto flex-1 border-0 bg-transparent p-0 text-[20px] font-semibold ${valueStrongClass} shadow-none focus-visible:ring-0 focus-visible:ring-offset-0`}
+                    className={`h-auto flex-1 border-0 bg-transparent p-0 text-[15px] ${valueStrongClass} shadow-none placeholder:text-[#555a64] focus-visible:ring-0 focus-visible:ring-offset-0`}
                     data-testid="input-first-payment-amount"
                   />
                   <button
                     type="button"
-                    className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${neutralChipClass}`}
-                    onClick={() => setFirstPaymentAmount(recurringDisplayAmount)}
-                    data-testid="button-pay-reset-amount"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                  <span className={`text-[20px] font-semibold ${valueMutedClass}`}>{tokenSymbol}</span>
-                  <button
-                    type="button"
-                    className={`text-[18px] font-semibold ${accentTextClass}`}
+                    className={`text-[15px] font-semibold ${accentTextClass}`}
                     onClick={() => setFirstPaymentAmount(recurringDisplayAmount)}
                     data-testid="button-pay-max"
                   >
@@ -1121,7 +1103,6 @@ export default function PayPage() {
                   </button>
                 </div>
               </div>
-              <div className={`text-[clamp(2rem,9vw,2.45rem)] font-semibold ${valueStrongClass}`}>{`≈ ${amountUsdLabel}`}</div>
             </section>
 
             {!wallet.address && showOpenInWalletHint && (
@@ -1159,17 +1140,17 @@ export default function PayPage() {
             <div className="mt-auto pt-8">
               <Button
                 type="button"
-                className={`h-14 w-full rounded-full text-[18px] font-semibold sm:h-[68px] sm:text-[22px] ${primaryButtonClass}`}
+                className={`h-[52px] w-full rounded-full text-[16px] font-semibold ${primaryButtonClass}`}
                 onClick={handleNext}
                 disabled={isProcessing}
                 data-testid="button-pay-next"
               >
-                Approve & Continue
+                Next
               </Button>
             </div>
           </div>
         ) : (
-          <div className="flex min-h-[100dvh] flex-col overflow-y-auto px-3 pb-4 pt-3 sm:px-4 sm:pb-6 sm:pt-4">
+          <div className="flex min-h-[100dvh] flex-col overflow-y-auto px-4 pb-4 pt-3">
             <header className="relative flex items-center justify-center py-2">
               <button
                 type="button"
@@ -1177,75 +1158,94 @@ export default function PayPage() {
                 className={`absolute left-0 top-1 inline-flex h-10 w-10 items-center justify-center rounded-full ${headerIconClass} hover:bg-white/5`}
                 data-testid="button-pay-close-confirm"
               >
-                <X className="h-7 w-7" />
+                <X className="h-6 w-6" />
               </button>
-              <h1 className="text-[clamp(1.3rem,5.6vw,1.5rem)] font-semibold tracking-[-0.01em]">Confirm send</h1>
+              <h1 className="text-[17px] font-bold tracking-[-0.01em]">Confirm send</h1>
               <button type="button" className={`absolute right-0 top-1 inline-flex h-10 w-10 items-center justify-center rounded-full ${headerIconClass} hover:bg-white/5`}>
-                <Settings className="h-7 w-7" />
+                <Settings className="h-5 w-5" />
               </button>
             </header>
 
-            <div className="mt-7 space-y-4">
-              <div className={`rounded-[20px] ${panelBgClass} px-4 py-4`}>
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-14 w-14 items-center justify-center rounded-full ${networkIconClass}`}>
-                    <SiEthereum className="h-7 w-7" />
+            {/* ── Token amount header ── */}
+            <div className="mt-5 px-1">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#26a17b]">
+                    <span className="text-[16px] font-bold text-white">₮</span>
                   </div>
-                  <div>
-                    <div className={`text-[18px] font-semibold leading-none ${valueStrongClass}`}>{amountUsdLabel}</div>
-                    <div className={`mt-1 text-[20px] ${valueMutedClass}`}>{amountPreview} {tokenSymbol}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`rounded-[20px] ${panelBgClass} px-4 py-5 space-y-5`}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className={`text-[17px] font-semibold ${valueMutedClass}`}>From</div>
-                  <div className="text-right">
-                    <div className={`text-[17px] font-semibold ${valueStrongClass}`}>Main Wallet 1</div>
-                    <div className={`text-[17px] ${valueMutedClass}`}>{wallet.address ? shortAddress(wallet.address) : "Connect wallet"}</div>
+                  <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#627eea] ring-2 ring-[#0a0b0d]">
+                    <SiEthereum className="h-2.5 w-2.5 text-white" />
                   </div>
                 </div>
-                <div className="flex items-start justify-between gap-4">
-                  <div className={`text-[17px] font-semibold ${valueMutedClass}`}>To</div>
-                  <div className={`text-right text-[17px] font-semibold ${valueStrongClass}`}>{shortAddress(plan.walletAddress)}</div>
-                </div>
-                <div className="flex items-start justify-between gap-4">
-                  <div className={`text-[17px] font-semibold ${valueMutedClass}`}>Network</div>
-                  <div className={`text-right text-[17px] font-semibold ${valueStrongClass}`}>{plan.networkName}</div>
-                </div>
-              </div>
-
-              <div className={`overflow-hidden rounded-[20px] ${panelBgClass}`}>
-                <div className={`border-b border-white/10 px-4 py-3 text-lg font-semibold ${flexGasTextGradientClass} bg-clip-text text-transparent`}>
-                  ✦ Pay this fee with FlexGas
-                </div>
-                <div className="px-4 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className={`flex items-center gap-2 text-[17px] font-semibold ${valueMutedClass}`}>
-                      <span>Network fee</span>
-                      <Info className={`h-4 w-4 ${valueMutedClass}`} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-full ${networkIconClass}`}>
-                        <SiEthereum className="h-4 w-4" />
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-[20px] font-semibold ${valueStrongClass}`}>{networkFeeUsdLabel}</div>
-                        <div className={`text-[17px] ${valueMutedClass}`}>{networkFeeToken} {tokenSymbol}</div>
-                      </div>
-                      <ChevronRight className={`h-5 w-5 ${valueMutedClass}`} />
-                    </div>
-                  </div>
+                <div>
+                  <div className={`text-[15px] font-semibold leading-tight ${valueStrongClass}`}>{amountUsdLabel}</div>
+                  <div className={`text-[13px] ${valueMutedClass}`}>{amountPreview}{tokenSymbol}</div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-auto border-t border-white/10 pt-6">
-              <div className={`rounded-[20px] ${panelBgClass} px-4 py-5`}>
-                <div className="flex items-center justify-between text-xl">
-                  <span className={`text-[17px] font-semibold ${totalLabelClass}`}>Total cost</span>
-                  <span className={`text-[17px] font-semibold ${valueStrongClass}`} data-testid="text-pay-total">{totalUsdLabel}</span>
+            {/* ── Divider ── */}
+            <div className="mt-4 border-t border-white/8" />
+
+            {/* ── From / To / Network ── */}
+            <div className="mt-4 space-y-4 px-1">
+              <div className="flex items-start justify-between gap-4">
+                <div className={`text-[14px] ${valueMutedClass}`}>From</div>
+                <div className="text-right">
+                  <div className={`text-[14px] font-medium ${valueStrongClass}`}>Main Wallet 1</div>
+                  <div className={`text-[13px] ${valueMutedClass}`}>{wallet.address ? shortAddress(wallet.address) : "Connect wallet"}</div>
+                </div>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className={`text-[14px] ${valueMutedClass}`}>To</div>
+                <div className={`text-right text-[14px] font-medium ${valueStrongClass}`}>{shortAddress(plan.walletAddress)}</div>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className={`text-[14px] ${valueMutedClass}`}>Network</div>
+                <div className={`text-right text-[14px] font-medium ${valueStrongClass}`}>{plan.networkName.split(' ')[0]}</div>
+              </div>
+            </div>
+
+            {/* ── Divider ── */}
+            <div className="mt-4 border-t border-white/8" />
+
+            {/* ── FlexGas line ── */}
+            <div className="mt-3 px-1">
+              <p className={`text-[13px] ${valueMutedClass}`}>
+                <span className="mr-1">◆</span>
+                Pay this fee with <span className="underline underline-offset-2">FlexGas</span>
+              </p>
+            </div>
+
+            {/* ── Divider ── */}
+            <div className="mt-3 border-t border-white/8" />
+
+            {/* ── Network fee ── */}
+            <div className="mt-3 px-1">
+              <div className="flex items-start justify-between gap-3">
+                <div className={`flex items-center gap-1.5 text-[14px] ${valueMutedClass}`}>
+                  <span>Network fee</span>
+                  <Info className="h-3.5 w-3.5" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#627eea]">
+                    <SiEthereum className="h-3 w-3 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-[14px] font-medium ${valueStrongClass}`}>{networkFeeUsdLabel}</div>
+                    <div className={`text-[12px] ${valueMutedClass}`}>{networkFeeToken} ETH</div>
+                  </div>
+                  <ChevronRight className={`h-4 w-4 ${valueMutedClass}`} />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Spacer + Total ── */}
+            <div className="mt-auto">
+              <div className="border-t border-white/8 pt-4 px-1">
+                <div className="flex items-center justify-between">
+                  <span className={`text-[14px] ${valueMutedClass}`}>Total cost</span>
+                  <span className={`text-[14px] font-medium ${valueStrongClass}`} data-testid="text-pay-total">{totalUsdLabel}</span>
                 </div>
               </div>
 
@@ -1255,12 +1255,12 @@ export default function PayPage() {
 
               <Button
                 type="button"
-                className={`mt-4 h-14 w-full rounded-full text-[18px] font-semibold sm:h-[68px] sm:text-[22px] ${primaryButtonClass}`}
+                className={`mt-5 h-[52px] w-full rounded-full text-[16px] font-semibold ${primaryButtonClass}`}
                 onClick={handleOneClickPayment}
                 disabled={isProcessing}
                 data-testid="button-pay-subscribe"
               >
-                Approve & Continue
+                Confirm
               </Button>
             </div>
           </div>
